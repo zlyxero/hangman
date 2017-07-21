@@ -1,107 +1,122 @@
+class Hangman:
+	"""
+	attributes:
+  
+	word: The secret word of the game
+	mask: A clone of the word that replaces each letter with an underscore to mask what has not been guessed yet. 
+		  letters guessed will be shown.
+	guess: The character that the user guesses.	
+	steps: A list with characters that represent the steps leading to 'game over'.
+	misses: keeps track of the number of times the user guesses a wrong character. 
+	name: The name of the user
+  
+  	
 
-print """Welcome To The Hangman Game!
-Guess the secret word one letter at a time.."""
+	"""
 
-word =  "hangman"
-word = word.lower()
-
-#define exceptions
-
-class Error(Exception):
-	"""The base class for the game derived from the parent Exception class"""
-	pass
-
-class NoInputErr(Error):
-	"""Raised when the user fails to enter any character in the prompt"""
-	pass
-class MoreThanOneCharacterErr(Error):
-	"""Raised when the user enters more than one character"""
-	pass
-
-class NotAlphaErr(Error):
-	"""Raised when the input character from the user is not an alphabet character"""
-	pass
+	def __init__(self, word):
+		self.word = [c for c in word.lower()]
+		self.mask = [c.replace(c, "_") for c in self.word]
+		self.steps = ["________ " , "|  |" , "|  0" , "| /|\ " , "| / \ " , "| " ]
+		self.misses = 0
+		self.name = raw_input("Enter your name: ")
 	
-class AlreadyGuessedErr(Error):
-	"""Raised when the input character from the user has been guessed already"""
-	pass	
-
-	
-#main game
-
-def hangman_game(word):
-	wrd = [c for c in word]
-	misses = ["________ " , "|  |" , "|  0" , "| /|\ " , "| / \ " , "| " ]
-	count = 0
-	loose_msg = "You loose!"
-	win_msg = "\nYOU WIN!"
-	mask = "_" * len(word)
-	word_rep = [c for c in mask]
-	
-	while True:
-		if count == len(misses):
-			print loose_msg
-			break
-		elif "".join(word_rep) == word:
-			print win_msg
-			break
+	def right_guess(self):
+		
+		"""
+		 checks if the user's guess is correct and prints out an updated mask. 
+		   > initializes variable indx to the index of guess
+		   > replaces underscore in mask with the guessed character.
+		   > adds a dollar sign to guessed character in word. This, in a loop case, will allow 
+				for picking the index of the next same guessed character in word using the index method 
+		"""
+		
+		while self.guess in self.word:
+				
+				indx = self.word.index(self.guess) 
+				self.mask[indx] = self.guess
+				self.word[indx] = "$"
 			
-		try:	
-			input = raw_input("\nEnter letter > ")
-			if not input:
-				raise NoInputErr
-			elif not input.isalpha():
-				raise NotAlphaErr
-			elif len(input) > 1:
-				raise MoreThanOneCharacterErr
-			elif input in word_rep:
-				raise AlreadyGuessedErr
-        
-		except NoInputErr:
-			print "You didn't enter any character"
-			continue
-		except MoreThanOneCharacterErr:
-			print("Please enter only one character")
-			continue
-		except NotAlphaErr:
-			print("Please enter only a character in the alphabet")
-			continue
-		except AlreadyGuessedErr:
-			print("You already guessed that character. Try guessing another one")
-			continue
+		print("You guessed correctly. Here's your progress: "),
+		print " ".join(self.mask)
 		
-		#work with lower case as in word
-		input = input.lower()  	
+	def wrong_guess(self):
 		
-		if input not in wrd:
-			count += 1
-			for c in misses[:count]:
-				print c
-			continue		
-		elif input in word:
-			while input in wrd:
-				indx = wrd.index(input) 
-				word_rep[indx] = input
-				wrd[indx] = "$"
-			for_print = [c + " " for c in word_rep]
-			print "\nYou guessed correctly a character in the word:",
-			print "".join(for_print)
-			continue
-						
+		""" checks if the user's guess is incorrect, increments guesses and prints out the steps."""
+		
+		if self.guess not in self.word:
 			
-hangman_game(word)				
-
-print ""
-
-#Ask the user if they wants to play again
-
-def play_again(value = raw_input("Would you like to play again?: Y/N > ")): 
-	value = value.upper()
-	if value == "Y":
-		print("\nGood Luck On Another Try!!\n")
-		hangman_game(word)
-	else:
-		pass
+			self.misses += 1
+			
+			print(" letter [%s] is not in the word.\n") % self.guess
+			
+			for s in self.steps[ : self.misses ]:
+				print(s)
+		else:
+			self.right_guess()   
+	
+			
+	def prompt(self):
 		
+		""" prompts the user to guess a letter in the word and checks for exceptions."""
+		
+		while True:
 
-play_again()		
+			self.guess = raw_input("\n Guess a character in the word: > ").lower()
+			print ""	
+			
+			if not self.guess:
+				print("\n You didn't enter any character")
+				
+			elif not self.guess.isalpha():
+				print("\n Please enter only a character in the alphabet")
+		
+			elif len(self.guess) > 1:
+				print("\n Please enter only one character")
+			
+			elif self.guess in self.mask:
+				print("\n You guessed that already! Try another guess")
+			
+			else:
+				break	 
+			
+		return self.guess
+		self.wrong_guess()
+	
+	def win(self):
+		
+		""" checks if the user has won and prints a message """
+		
+		if "_" not in self.mask:
+			print("You win!")
+			return True
+					
+	def lose(self):
+		
+		"""checks if the user has lost and prints a message"""
+		
+		if self.misses == len(self.steps):
+			print("You lost!"),
+			return True
+			
+	def play_game(self):
+		
+		"""bringing it all together :) """
+		
+		print "\n Welcome To The Hangman Game %s! \n" %self.name	
+		while True:
+			
+			if self.win():
+				break
+				
+			elif self.lose():
+				break
+				
+			self.prompt()
+			self.wrong_guess()
+			
+		
+if __name__ == "__main__":
+	
+	game_round = Hangman("python")
+	game_round.play_game()
